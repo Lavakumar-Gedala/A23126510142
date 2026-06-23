@@ -157,3 +157,25 @@ SELECT DISSTINCT studentID FROM notifications
 WHERE notificationType = 'Placement'
 AND createdAt >= NOW() - INTERVAL '7 days'
 
+
+Stage 4
+Caching and Performance Optimization
+
+Our database is getting slow because every time a student opens the page, it asks the database again and again for notifications. This increases load and makes the system slow.
+
+So, we can use some simple methods to improve performance.
+
+solution: Use Cache
+
+Instead of always asking PostgreSQL, we can store data in a fast temporary memory called Redis.
+
+How it works:
+First check Redis for notifications
+If data is found → show it directly (very fast)
+If not found → get from PostgreSQL
+Then store it in Redis for next time
+
+Advantages:
+Very fast response
+Reduces load on database
+```
