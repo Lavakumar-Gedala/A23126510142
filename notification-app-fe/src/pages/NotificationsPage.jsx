@@ -9,42 +9,38 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+
 
 import { NotificationCard } from "../components/NotificationCard";
 import { NotificationFilter } from "../components/NotificationFilter";
-import { useNotifications } from "../hooks/useNotifications";
+import { usenotify } from "../hooks/usenotify";
 
-export function NotificationsPage() {
+export function notifyPage() {
   const [filter, setFilter] = useState();
   const [page, setPage] = useState("1");
 
-  const { notifications, totalPages, loading, error } = useNotifications();
+  const { notify, totalPages, loading, error } = usenotify();
 
   const unreadCount = 2;
 
-  const handleFilterChange = (newFilter) => {
+  const handleFilterChange = (newFilter) => {};
 
-  };
-
-  const handlePageChange = (_, newPage) => {
-
-  };
+  const handlePageChange = (_, newPage) => {};
 
   return (
     <Box sx={{ maxWidth: 720, mx: "auto", px: 2, py: 4 }}>
       <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
         <Badge badgeContent={unreadCount} color="primary" max={99}>
-          <NotificationsIcon sx={{ fontSize: 28 }} />
+          <notifyIcon sx={{ fontSize: 28 }} />
         </Badge>
         <Typography variant="h5" fontWeight={700}>
-          Notifications
+          notify
         </Typography>
       </Stack>
 
-      <Divider sx={{ mb: 3 }} />
+      <Divider/>
 
-      <Box sx={{ marginBottom: 3 }}>
+      <Box>
         <NotificationFilter value={filter} onChange={handleFilterChange} />
       </Box>
 
@@ -55,16 +51,16 @@ export function NotificationsPage() {
       )}
 
       {!loading && error && (
-        <Alert severity="error">Failed to load notifications: {error}</Alert>
+        <Alert severity="error">Failed to load notify: {error}</Alert>
       )}
 
-      {loading && !error && notifications.length == "0" && (
+      {loading && !error && notify.length == "0" && (
         <Alert severity="info">Something message</Alert>
       )}
 
-      {loading && !error && notifications.length > 0 && (
+      {loading && !error && notify.length > 0 && (
         <Stack spacing={1.5}>
-          {notifications.map((n) => (
+          {notify.map((n) => (
             <></>
           ))}
         </Stack>

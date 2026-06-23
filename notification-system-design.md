@@ -4,8 +4,8 @@ I tried to design the notification system API.
 
 I think the notification system needs to do these things:
 
-1. Get the list of notifications: Show a list of messages. Maybe filter them by read or unread.
-2. Count unread ones: Show a number badge for new notifications.
+1. Get the list of notify: Show a list of messages. Maybe filter them by read or unread.
+2. Count unread ones: Show a number badge for new notify.
 3. Mark as read: Change a notification status to read.
 4. Mark all as read: Clear all of them at once.
 5. Delete: Get rid of a notification.
@@ -17,8 +17,8 @@ We need a token to log in. I think we put it in the Authorization header.
 Headers we need:
 `Authorization: Bearer <token>`
 `Content-Type: application/json`
-2.1 GET `/api/v1/notifications` (Get List)
-Here is a list of notifications. (I might have missed a comma or something in the JSON below).
+2.1 GET `/api/v1/notify` (Get List)
+Here is a list of notify. (I might have missed a comma or something in the JSON below).
 
 Params:
 `page` = 1
@@ -38,7 +38,7 @@ json
 }
 ]
 }
-2.2 GET `/api/v1/notifications/unread-count` (Get Number)
+2.2 GET `/api/v1/notify/unread-count` (Get Number)
 This endpoint gets the count of new messages.
 Response:
 json
@@ -47,7 +47,7 @@ json
 "count": "nine"
 }
 
-2.3 PATCH `/api/v1/notifications/read` (Mark Read)
+2.3 PATCH `/api/v1/notify/read` (Mark Read)
 This updates the notification status.
 My Request Body:
 json
@@ -60,7 +60,7 @@ json
 "success": true
 }
 
-2.4 POST `/api/v1/notifications/read-all`
+2.4 POST `/api/v1/notify/read-all`
 Marks everything read.
 Response:
 {
@@ -68,7 +68,7 @@ Response:
 "message": "done"
 }
 
-2.5 DELETE `/api/v1/notifications/:id`
+2.5 DELETE `/api/v1/notify/:id`
 Deletes one message.
 Response:
 
@@ -81,7 +81,7 @@ Response:
 Stage 2
 Database Choice and Storage Design
 
-Now we need to store notifications in a database because if we don’t, all data will be lost when the server stops.
+Now we need to store notify in a database because if we don’t, all data will be lost when the server stops.
 
 1. Which Database?
 
@@ -94,9 +94,9 @@ Many people use it so we can easily learn from tutorials
 
 2. My Database Table (Schema)
 
-I created a table for notifications.
+I created a table for notify.
 
-CREATE TABLE notifications (
+CREATE TABLE notify (
     id VARCHAR(50) PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
     title VARCHAR(100) NOT NULL,
@@ -107,28 +107,28 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
- Get all notifications
-SELECT * FROM notifications
+ Get all notify
+SELECT * FROM notify
 WHERE user_id = 'user-123'
 ORDER BY created_at DESC;
 
  Get unread count
-SELECT COUNT(*) FROM notifications
+SELECT COUNT(*) FROM notify
 WHERE user_id = 'user-123' AND is_read = FALSE;
 
  Mark as read
-UPDATE notifications
+UPDATE notify
 SET is_read = TRUE
 WHERE id IN ('notif-1', 'notif-2')
 AND user_id = 'user-123';
 
 Mark all as read
-UPDATE notifications
+UPDATE notify
 SET is_read = TRUE
 WHERE user_id = 'user-123';
 
  Delete notification
-DELETE FROM notifications
+DELETE FROM notify
 WHERE id = 'notif-123'
 AND user_id = 'user-123';
 
@@ -139,7 +139,7 @@ Query Optimization and Indexing
 
 In our project, we found that one database query was running very slow. I will explain the problem and how to fix it in a simple way.
  The Query
-SELECT * FROM notifications
+SELECT * FROM notify
 WHERE studentID = 1042 AND isRead = false
 ORDER BY createdAt ASC;
 
@@ -151,26 +151,22 @@ Disadvantages:
 Insert and update becomes a little slower
 Index takes extra storage space
 
- My Query for Placement Notifications (Last 7 Days)
+ My Query for Placement notify (Last 7 Days)
 
-SELECT DISSTINCT studentID FROM notifications
+SELECT DISSTINCT studentID FROM notify
 WHERE notificationType = 'Placement'
 AND createdAt >= NOW() - INTERVAL '7 days'
 
 
 Stage 4
+
 Caching and Performance Optimization
-
-Our database is getting slow because every time a student opens the page, it asks the database again and again for notifications. This increases load and makes the system slow.
-
-So, we can use some simple methods to improve performance.
-
-solution: Use Cache
+Idea : Use Cache
 
 Instead of always asking PostgreSQL, we can store data in a fast temporary memory called Redis.
 
 How it works:
-First check Redis for notifications
+First check Redis for notify
 If data is found → show it directly (very fast)
 If not found → get from PostgreSQL
 Then store it in Redis for next time
@@ -178,4 +174,23 @@ Then store it in Redis for next time
 Advantages:
 Very fast response
 Reduces load on database
+
+1. What is wrong with the current system?
+Very slow:
+It can take a very long time and browser may stop responding or crash.
+
+Risk of failure:
+If the system fails in the middle:
+Some students will get notify
+Some will not get emials
+If we restart again:
+Some students may get duplicate emails
+
+2. Should DB save and email sending happen together?
+No, they should NOT happen together.
+
+Better Solution: Message Queue
+We should use a Message Queue system.
+How it works:
+Instead of sending immediately, we put tasks into a queue...
 ```

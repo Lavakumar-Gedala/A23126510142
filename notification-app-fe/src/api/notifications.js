@@ -1,2 +1,1 @@
-export function fetchNotifications() {
-}
+export function fetchnotify() {}
