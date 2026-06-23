@@ -78,21 +78,6 @@ Response:
 }
 
 
-3. Schemas (Rules for the data)
-
-I tried to write a JSON Schema. I copied this from the internet, but I think I broke some of the syntax.
-
-json
-{
-  "schema": "http://json-schema.org/draft-07/schema#", // Missing the "$" sign in front of schema
-  "type": "object",
-  "required": ["success", "data"],
-  }
-
-```
-
----
-
 Stage 2
 Database Choice and Storage Design
 
@@ -105,7 +90,7 @@ I think we should use PostgreSQL.
 It is a SQL database.
 It stores data in tables like rows and columns.
 It is popular and free.
-Many people use it so we can easily learn from tutorials.
+Many people use it so we can easily learn from tutorials
 
 2. My Database Table (Schema)
 
@@ -122,49 +107,53 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-3. Problems if data becomes large
-
-If many users start using the app, some problems can happen:
-
-Slow performance
-It may take time to find notifications if data is too large.
-Storage issue
-Database may use a lot of space.
-Too many requests
-If many users use it at same time, server may slow down.
-
-
-4. Solutions
-Indexing
-We can add index on user_id so search becomes faster.
-Delete old data
-We can remove notifications older than 30 days.
-Better server
-We can upgrade server if needed.
-
-
-5. SQL Queries for API
-5.1 Get all notifications
+ Get all notifications
 SELECT * FROM notifications
 WHERE user_id = 'user-123'
 ORDER BY created_at DESC;
 
-5.2 Get unread count
+ Get unread count
 SELECT COUNT(*) FROM notifications
 WHERE user_id = 'user-123' AND is_read = FALSE;
 
-5.3 Mark as read
+ Mark as read
 UPDATE notifications
 SET is_read = TRUE
 WHERE id IN ('notif-1', 'notif-2')
 AND user_id = 'user-123';
 
-5.4 Mark all as read
+Mark all as read
 UPDATE notifications
 SET is_read = TRUE
 WHERE user_id = 'user-123';
 
-5.5 Delete notification
+ Delete notification
 DELETE FROM notifications
 WHERE id = 'notif-123'
 AND user_id = 'user-123';
+
+
+Stage 3
+
+Query Optimization and Indexing
+
+In our project, we found that one database query was running very slow. I will explain the problem and how to fix it in a simple way.
+ The Query
+SELECT * FROM notifications
+WHERE studentID = 1042 AND isRead = false
+ORDER BY createdAt ASC;
+
+ Cost of adding index
+Advantages:
+Faster search queries
+Better performance for large data
+Disadvantages:
+Insert and update becomes a little slower
+Index takes extra storage space
+
+ My Query for Placement Notifications (Last 7 Days)
+
+SELECT DISSTINCT studentID FROM notifications
+WHERE notificationType = 'Placement'
+AND createdAt >= NOW() - INTERVAL '7 days'
+
